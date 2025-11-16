@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+model Usuario {
+  id              Int           @id @default(autoincrement())
+  nombres         String        // ⬅️ Almacena los nombres
+  apellidos       String        // ⬅️ Almacena los apellidos
+  usuario         String        @unique // ⬅️ El nombre de usuario único
+  correo          String        @unique
+  password        String        // ⬅️ La contraseña debe ser obligatoria
+  rol             String        @default("estudiante") // ⬅️ Valor por defecto
+  postulaciones   Postulacion[]
+}
+
+model Empresa {
+  id Int @id @default(autoincrement())
+
+  // Credenciales de acceso
+  email           String @unique // ⬅️ MODIFICADO: Debe ser único para el login
+  password        String // ⬅️ AGREGADO: Campo para almacenar el hash de la contraseña
+
+  // Información Básica
+  nombre          String
+  phones          String
+  contactName     String
+  nit             String? @unique // ⬅️ RECOMENDACIÓN: NIT único si aplica en tu país
+
+  // Ubicación
+  address         String
+  city            String
+  department      String
+
+  // Información Empresarial
+  companyType     String
+  economicSector  String
+  foundationYear  Int
+  employees       String
+
+  // Información Financiera y Comercial
+  annualRevenue        String
+  totalAssets          String?
+  equity               String?
+  distributionChannels String
+  mainClients          String
+  emailAuthorization   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  // 🔹 Relación con Vacantes
+  vacantes Vacante[]
+}
+
+model Vacante {
+  id            Int           @id @default(autoincrement())
+  titulo        String
+  descripcion   String
+  ubicacion     String
+  tipo          String         // Ej: "Tiempo completo", "Medio tiempo", "Práctica"
+  modalidad     String         // Ej: "Presencial", "Remoto", "Híbrido"
+  salario       String?        // Opcional
+  fechaCreacion DateTime       @default(now())
+
+  empresaId     Int
+  empresa       Empresa        @relation(fields: [empresaId], references: [id])
+
+  postulaciones Postulacion[]
+}
+
+model Postulacion {
+  id        Int      @id @default(autoincrement())
+  telefono  String?
+  cv_url    String?
+  // ✅ CAMPO AGREGADO: Para registrar el estado de la postulación
+  estado    String   @default("PENDIENTE") // Usamos String con un valor por defecto
+
+  fecha     DateTime @default(now())
+
+  vacanteId Int
+  usuarioId Int
+
+  vacante   Vacante @relation(fields: [vacanteId], references: [id])
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+}
